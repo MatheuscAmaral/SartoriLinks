@@ -3,7 +3,7 @@ import { fontFamily } from "tailwindcss/defaultTheme";
 /** @type {import('tailwindcss').Config} */
 
 const config = {
-	content: ['./src/**/*.{html,js,svelte,ts}'],
+	content: ['./src/**/*.{html,js,svelte,ts}', './node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}'],
 	darkMode: ["class"],
 	content: ["./src/**/*.{html,js,svelte,ts}"],
   safelist: ["dark"],
@@ -22,9 +22,20 @@ const config = {
 				ring: "hsl(var(--ring) / <alpha-value>)",
 				background: "hsl(var(--background) / <alpha-value>)",
 				foreground: "hsl(var(--foreground) / <alpha-value>)",
+				// flowbite-svelte
 				primary: {
 					DEFAULT: "hsl(var(--primary) / <alpha-value>)",
-					foreground: "hsl(var(--primary-foreground) / <alpha-value>)"
+					foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
+					50: '#FFF5F2',
+					100: '#FFF1EE',
+					200: '#FFE4DE',
+					300: '#FFD5CC',
+					400: '#FFBCAD',
+					500: '#FE795D',
+					600: '#EF562F',
+					700: '#EB4F27',
+					800: '#CC4522',
+					900: '#A5371B'
 				},
 				secondary: {
 					DEFAULT: "hsl(var(--secondary) / <alpha-value>)",
@@ -61,7 +72,7 @@ const config = {
 			}
 		}
 	},
-	plugins: []
+	plugins: [require('flowbite/plugin')]
 };
 
 export default config;
