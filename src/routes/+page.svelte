@@ -1,29 +1,77 @@
 <script lang="ts">
-    import "../app.pcss";
-    import { Switch } from "$lib/components/ui/switch";
+  import { onMount } from "svelte";
+  import "../app.pcss";
+  import { Switch } from "$lib/components/ui/switch";
+
+  import db from "../routes/fb";
+  import { collection, getDocs } from "firebase/firestore";
+  interface ListProps {
+    bg_color: string;
+    color: string;
+    href: string;
+    title: string;
+    border_color: string;
+  }
+
+  interface CompanyProps {
+    name_company: string;
+    logo: string;
+  }
+
+  let light = true;
+
+  const listsCollection = collection(db, "lists");
+  let lists: ListProps[] = [];
+
+  const companyCollection = collection(db, "company");
+  let company: CompanyProps[] = [];
+
+  onMount(() => {
+    const getLists = async () => {
+      const listsDB = await getDocs(listsCollection);
+      lists = listsDB.docs.map((list) => ({ ...list.data() }) as ListProps);
+
+      const companyDB = await getDocs(companyCollection);
+      company = companyDB.docs.map((c) => ({ ...c.data() }) as CompanyProps);
+    };
+
+    getLists();
+  });
+
+  const lightMode = () => {
+    light = !light;
+  };
 </script>
 
-<main class="bg-gray-100">
-    <div class="flex flex-col justify-center items-center h-svh gap-6 mx-auto max-w-3xl">
-        <img src="/faviconsartori.png" alt="logo" class="w-24">
-        
-        <h1 class="text-2xl font-semibold text-gray-700">@sartorieletrica</h1>
-        <Switch />
+<main class={`${light ? "bg-gray-100" : " bg-gray-950"}`}>
+  <div
+    class="flex flex-col justify-center items-center h-svh gap-6 mx-auto max-w-3xl"
+  >
+    {#each company as c}
+      <img src={c.logo} alt="logo" class={`w-28 rounded-full border-4 border-gray-300`} />
 
-        <section id="users-list">
+      <h1
+        class={`text-2xl font-semibold ${light ? "text-gray-700" : "text-gray-200"}`}
+      >
+        @{c.name_company}
+      </h1>
+    {/each}
 
-        </section>
+    <Switch on:click={lightMode} />
 
-        <section class="grid grid-rows-4 gap-5 mt-5 w-full">
-            <a href="https://www.google.com/maps/dir/-19.9364748,-44.069276/sartori+eletrica/@-19.933248,-44.0884877,15z/data=!3m1!4b1!4m9!4m8!1m1!4e1!1m5!1m1!1s0xa695ca68053d29:0xb9efa65c70d471e9!2m2!1d-44.0865666!2d-19.9238107?entry=ttu" class="bg-gray-50  border border-gray-200 p-5 w-full rounded-md text-center" target="_blank">
-                <p>Localização</p>
-            </a>
-            
-            <a href="bvgjv" class="bg-gray-50  border border-gray-200 p-5 w-full rounded-md text-center">
-                <p>Visite nosso site</p>
-            </a>
+    <section id="users-list"></section>
 
-        </section>
-    </div>
-
+    <section class="grid grid-rows-4 gap-5 mt-5 w-full">
+      {#each lists as list}
+        <a
+          href={list.href}
+          target="_blank"
+          style={`background-color: ${list.bg_color}; color: ${list.color}; border-color: ${list.border_color}`}
+          class={`border p-5 w-full rounded-md text-center`}
+        >
+          <p>{list.title}</p>
+        </a>
+      {/each}
+    </section>
+  </div>
 </main>
