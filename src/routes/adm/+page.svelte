@@ -2,7 +2,7 @@
   import db from "../fb";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
-  import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+  import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
   import { Dropzone } from "flowbite-svelte";
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
@@ -95,13 +95,41 @@
   });
 
   const updateCompanyData = async () => {
-    await updateDoc(companyDoc, {
+    const data = {
       name_company: name_company,
       logo: image,
-    });
+    }
+
+    await updateDoc(companyDoc, data);
 
     getData();
   };
+
+  const saveLink = async () => {
+    loading = true;
+    
+    const data = {
+      bg_color: bg_color,
+      color: color,
+      title: title,
+      border_color: border_color,
+      href: href
+    }
+
+    try {
+      await setDoc(doc(db, "lists", title), data);
+
+      getData();
+    }
+    
+    catch {
+
+    }
+
+    finally {
+      loading = false;
+    }
+  }
 
   //    import { getAuth, onAuthStateChanged } from "firebase/auth";
   //    import { goto } from "$app/navigation";
@@ -269,29 +297,29 @@
             <div class="flex justify-between">
               <div class="flex flex-col gap-1">
                 <label for="bg_color">Cor de fundo:</label>
-                <input on:change={(e) => bg_color = e.target.value} type="color" name="bg_color" id="bg_color" />
+                <input on:change={(e) => bg_color = e.target.value} value={bg_color} type="color" name="bg_color" id="bg_color" />
               </div>
               
               <div class="flex flex-col gap-1">
                 <label for="color">Cor do texto:</label>
-                <input on:change={(e) => color = e.target.value} type="color" name="color" id="color" />
+                <input on:change={(e) => (color = e.target.value)} value={color} type="color" name="color" id="color" />
               </div>
               
               <div class="flex flex-col gap-1">
                 <label for="border_color">Cor da borda:</label>
-                <input on:change={(e) => border_color = e.target.value} type="color" name="border_color" id="border_color" />
+                <input on:change={(e) => border_color = e.target.value} value={border_color} type="color" name="border_color" id="border_color" />
               </div>
             </div>
             
             <div class="flex flex-col gap-1">
               <label for="href"> Url:</label>
-              <Input placeholder="Digite url do link..." />
+              <Input on:change={(e) => href = e.target.value} placeholder="Digite url do link..." />
             </div>
           </div>
         </section>
 
         <Dialog.Footer>
-          <Button on:click={updateCompanyData}>
+          <Button on:click={saveLink}>
             {#if loading}
               <LoaderCircle class="animate-spin" />
             {:else}
