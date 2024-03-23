@@ -45,7 +45,7 @@
 
 <main class={`${light ? "bg-gray-100" : " bg-gray-950"}`}>
   <div
-    class="flex flex-col justify-center items-center h-svh gap-6 mx-auto max-w-3xl"
+    class="flex flex-col justify-center items-center h-svh gap-6 mx-5 lg:mx-auto lg:max-w-3xl"
   >
     {#each company as c}
       <img src={c.logo} alt="logo" class={`w-28 rounded-full border-4 border-gray-300`} />
@@ -59,9 +59,7 @@
 
     <Switch on:click={lightMode} />
 
-    <section id="users-list"></section>
-
-    <section class="grid grid-rows-4 gap-5 mt-5 w-full">
+    <section class="grid grid-rows-4 gap-5 mt-5 w-full ">
       {#each lists as list}
         <a
           href={list.href}
