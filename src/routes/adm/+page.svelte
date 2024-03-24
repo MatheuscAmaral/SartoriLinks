@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { storage } from "./../fb.js";
   import db from "../fb";
-  import { goto } from "$app/navigation";
+  import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
   import { onMount } from "svelte";
   import toast, { Toaster } from "svelte-french-toast";
   import { Trash2, Pencil, Loader, X, LoaderCircle } from "lucide-svelte";
@@ -13,12 +14,13 @@
     deleteDoc,
   } from "firebase/firestore";
   import { Dropzone } from "flowbite-svelte";
-  import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Modal } from "flowbite-svelte";
+
   let defaultModal = false;
+  let defaultModal2 = false;
   interface ListsProps {
     id: string;
     bg_color: string;
@@ -38,7 +40,7 @@
   let name_company = "";
   let edit = false;
   let image: string = "";
-  let value: string[] = [];
+  let value: File | null = null;
   let lists: ListsProps[] = [];
   let company: CompanyProps[] = [];
   let listId: string = "";
@@ -63,7 +65,6 @@
           const reader = new FileReader();
 
           reader.onload = () => {
-            console.log(reader.result);
             image = String(reader.result);
           };
 
@@ -85,13 +86,11 @@
     const target = e.target as HTMLInputElement;
 
     if (target && target.files) {
-      const files = target.files;
+      const file = target.files[0];
 
-      if (files.length > 0) {
-        value.push(files[0].name);
-        value = value;
-
-        image = URL.createObjectURL(files[0]);
+      if (file) {
+        image = URL.createObjectURL(file);
+        value = file;
       }
     }
   };
@@ -142,7 +141,6 @@
   const closeModal = () => {
     defaultModal = false;
     edit = false;
-    console.log(edit);
   };
 
   onMount(() => {
@@ -150,14 +148,47 @@
   });
 
   const updateCompanyData = async () => {
-    const data = {
-      name_company: name_company,
-      logo: image,
-    };
+    try {
+      if (!value) {
+        toast.error("Nenhuma imagem selecionada!", {
+          position: "top-right",
+        });
 
-    await updateDoc(companyDoc, data);
+        return;
+      }
 
-    getData();
+      loading = true;
+
+      const storageRef = ref(
+        storage,
+        "gs://sartorilinks.appspot.com/images/" + value.name
+      );
+
+      await uploadBytes(storageRef, value);
+
+      const imageUrl = await getDownloadURL(storageRef);
+
+      image = imageUrl;
+
+      const data = {
+        name_company: name_company,
+        logo: imageUrl,
+      };
+
+      await updateDoc(companyDoc, data);
+      defaultModal2 = false;
+      
+      toast.success("Dados da empresa editados com sucesso!", {
+        position: "top-right",
+      });
+      getData();
+    } catch {
+      toast.error("Ocorreu um erro ao editar os dados da empresa!", {
+        position: "top-right",
+      });
+    } finally {
+      loading = false;
+    }
   };
 
   const updateFormData = (e: Event, type: string) => {
@@ -221,7 +252,6 @@
 
     try {
       if (edit) {
-        console.log(listId);
         const listDoc = doc(db, "lists", listId);
         await updateDoc(listDoc, data);
       } else {
@@ -270,97 +300,99 @@
   {:else}
     <div>
       <div class="flex justify-center">
-        <Dialog.Root>
-          <div class="flex justify-end w-full">
-            <Dialog.Trigger class={`${buttonVariants({ variant: "outline" })}`}
-              >Editar</Dialog.Trigger
+        <Modal title={"Editar dados da empresa"} bind:open={defaultModal2}>
+          <form
+            on:submit={updateCompanyData}
+            class="grid grid-cols-1 justify-start gap-7 py-4"
+          >
+            <Dropzone
+              id="dropzone"
+              on:drop={(e) => dropHandle(e)}
+              on:dragover={(event) => {
+                event.preventDefault();
+              }}
+              on:change={(e) => handleChange(e)}
             >
-          </div>
-          <Dialog.Content class="sm:max-w-[600px]">
-            <Dialog.Header>
-              <Dialog.Title>Editar dados</Dialog.Title>
-              <Dialog.Description>
-                Edite os dados do site aqui. Clique em salvar quando estiver
-                pronto.
-              </Dialog.Description>
-            </Dialog.Header>
-            <div class="grid grid-cols-1 justify-start gap-7 py-4">
-              <Dropzone
-                id="dropzone"
-                on:drop={(e) => dropHandle(e)}
-                on:dragover={(event) => {
-                  event.preventDefault();
-                }}
-                on:change={(e) => handleChange(e)}
+              <svg
+                aria-hidden="true"
+                class={`mb-3 mt-10 w-10 h-10 text-gray-400 ${company.length > 0 && image ? "hidden" : "block"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                /></svg
               >
-                <svg
-                  aria-hidden="true"
-                  class={`mb-3 mt-10 w-10 h-10 text-gray-400 ${company.length > 0 && image ? "hidden" : "block"}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  ><path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  /></svg
-                >
-                {#if value.length === 0 && !image}
-                  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span class="font-semibold"
-                      >Clique para inserir uma imagem</span
-                    > ou arraste e solte
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mb-12">
-                    SVG, PNG, JPG or GIF (MAX. 800x400px)
-                  </p>
-                {:else}
-                  <div class="my-5">
-                    <img src={image} class="w-24" alt="logo_pagina" />
-                  </div>
-                {/if}
-              </Dropzone>
+              {#if !value && !image}
+                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span class="font-semibold"
+                    >Clique para inserir uma imagem</span
+                  > ou arraste e solte
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-12">
+                  SVG, PNG, JPG or GIF (MAX. 800x400px)
+                </p>
+              {:else}
+                <div class="my-5">
+                  <img src={image} class="w-24" alt="logo_pagina" />
+                </div>
+              {/if}
+            </Dropzone>
 
-              <div class="flex flex-col gap-1 justify-start">
-                <Label for="name" class=" text-sm">Nome da empresa:</Label>
-                <Input
-                  id="name"
-                  value={name_company}
-                  on:change={(e) => updateCompanyName(e)}
-                  placeholder="Digite o nome da empresa..."
-                  class="col-span-3"
-                />
-              </div>
+            <div class="flex flex-col gap-1 justify-start">
+              <Label for="name" class=" text-sm">Nome da empresa:</Label>
+              <Input
+                id="name"
+                value={name_company}
+                on:change={(e) => updateCompanyName(e)}
+                placeholder="Digite o nome da empresa..."
+                class="col-span-3"
+              />
             </div>
-            <Dialog.Footer>
-              <Button on:click={updateCompanyData}>
+
+            <section class="border-t w-full pt-5">
+              <Button
+                type="submit"
+                class="bg-white border border-gray-200 text-black hover:bg-gray-100"
+              >
                 {#if loading}
-                  <LoaderCircle class="animate-spin" />
+                  <LoaderCircle class="animate-spin" font-size={12} />
                 {:else}
                   Salvar
                 {/if}
               </Button>
-            </Dialog.Footer>
-          </Dialog.Content>
-        </Dialog.Root>
+              <Button
+                on:click={() => (defaultModal2 = false)}
+                color="alternative"
+                class="bg-white border border-gray-200 text-black hover:bg-gray-100"
+                >Fechar</Button
+              >
+            </section>
+          </form>
+        </Modal>
       </div>
 
       <section class="relative w-full mx-auto m-5">
         {#if company}
           {#each company as c}
             <div
-              class={`flex flex-col gap-10 justify-center items-center mb-10`}
+              class={`flex flex-col gap-10 justify-center items-center mb-10 relative`}
             >
-              <button on:click={() => goto("/")}>
-                <img
-                  src={company[0].logo.length
-                    ? c.logo
-                    : "/No_Image_Available.jpg"}
-                  class={`w-24 rounded-full border-4 border-gray-300`}
-                  alt="logo"
-                />
+              <img
+                src={company[0].logo.length ? c.logo : "/No_Image_Available.jpg"}
+                class={`w-24 rounded-full border-4 border-gray-300`}
+                alt="logo"
+              />
+
+              <button
+                on:click={() => (defaultModal2 = true)}
+                class="bg-gray-800 text-white p-1.5 rounded-full absolute top-16 ml-14"
+              >
+                <Pencil />
               </button>
             </div>
 
