@@ -37,6 +37,7 @@
   }
 
   let loading = false;
+  let loadDelete = false;
   let name_company = "";
   let edit = false;
   let image: string = "";
@@ -219,7 +220,7 @@
 
   const deleteLink = (list: ListsProps) => {
     try {
-      loading = true;
+      loadDelete = true;
       deleteDoc(doc(db, "lists", list.id));
       toast.success(`${list.title} deletado com sucesso!`, {
         position: "top-right",
@@ -228,7 +229,7 @@
     } catch {
       toast.error("Ocorreu um erro ao deletar o link!");
     } finally {
-      loading = false;
+      loadDelete = false;
     }
   };
 
@@ -456,7 +457,11 @@
                 on:click={() => deleteLink(list)}
                 class="bg-gray-800 p-1 rounded-sm text-white"
               >
-                <Trash2 />
+                {#if loadDelete}
+                  <Loader/>
+                  {:else}
+                    <Trash2 />
+                {/if}
               </button>
             </div>
           </button>
