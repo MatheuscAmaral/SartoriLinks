@@ -1,40 +1,29 @@
 <script lang="ts">
+	import { toast } from 'svelte-french-toast';
     import { goto } from "$app/navigation";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
 
-    // export let title;
 
     const auth = getAuth();
     
-    const logIn = () => {
-    //     e.preventDefault();
+    const logIn = (e: Event) => {
+        e.preventDefault();
 
-    //     let email = document.getElementById("email");
-    //     let password = document.getElementById("password");
+        let email = document.getElementById("email") as HTMLInputElement;
+        let password = document.getElementById("password") as HTMLInputElement;
 
-    //     if(title == "Login") {
-    //         signInWithEmailAndPassword(auth, email, password).then(
-    //             (userCredential) => {
-    //                 const user = userCredential.user;
-    //                 localStorage.setItem("@userSartoriLinks", user.uid);
-    //                 goto("/");
-    //             }
-    //         ).catch((error) => {
-    //             console.error(error);
-    //         })
-    //     } else {
-    //         createUserWithEmailAndPassword(auth, email, password).then(
-    //             (userCredential) => {
-    //                 const user = userCredential.user;
-    //                 localStorage.setItem("@userSartoriLinks", user.uid);
-    //                 goto("/");
-    //             }
-    //         ).catch((error) => {
-    //             console.error(error);
-    //         })
-    //     }
+        signInWithEmailAndPassword(auth, email.value, password.value)
+        .then((userCredential) => {
+            userCredential.user;
+            toast.success(`Usuário logado com sucesso!`);
+            goto("/adm");
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+        });
     }
 </script>
 

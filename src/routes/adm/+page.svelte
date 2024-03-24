@@ -2,9 +2,11 @@
   import { storage } from "./../fb.js";
   import db from "../fb";
   import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+  import { getAuth, onAuthStateChanged } from "firebase/auth";
   import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
   import toast, { Toaster } from "svelte-french-toast";
-  import { Trash2, Pencil, Loader, X, LoaderCircle } from "lucide-svelte";
+  import { Trash2, Pencil, Loader, X, LoaderCircle, CircleArrowLeft, LogOut } from "lucide-svelte";
   import {
     collection,
     getDocs,
@@ -45,6 +47,7 @@
   let lists: ListsProps[] = [];
   let company: CompanyProps[] = [];
   let listId: string = "";
+  let usuario: string = "";
 
   let href = "#";
   let border_color = "#d1cdcd";
@@ -276,30 +279,41 @@
     }
   };
 
-  //    import { getAuth, onAuthStateChanged } from "firebase/auth";
-  //    import { goto } from "$app/navigation";
 
-  //    onMount(() => {
-  //         const auth = getAuth();
+  onMount(() => {
+      const auth = getAuth();
 
-  //         onAuthStateChanged(auth, (user) => {
-  //             if(user) {
-  //                 console.log("Usuário logado!");
-  //             } else {
-  //                 console.log("Usuário não encontrado");
-  //                 goto("/adm/login");
-  //             }
-  //         })
-  //    });
+      onAuthStateChanged(auth, (user) => {
+          if(user) {
+              console.log("Usuário logado!");
+              usuario = String(user.email);
+          } else {
+              console.log("Usuário não encontrado");
+              goto("/login");
+          }
+      })
+  });
 </script>
 
 <main class="mx-5 lg:mx-auto lg:max-w-4xl grid grid-cols-1 gap-10 mb-20 mt-10">
   {#if loading}
-    <div class="flex justify-center mt-32">
-      <Loader class="animate-spin" />
-    </div>
+  <div class="flex justify-center mt-32">
+    <Loader class="animate-spin" />
+  </div>
   {:else}
-    <div>
+  <div>
+      <div>
+        <button class="absolute left-10" on:click={() => goto("/")}>
+          <CircleArrowLeft />
+        </button>
+
+        <div class="flex justify-center gap-2 absolute right-12 text-sm">
+          <p>{usuario}</p>
+          <button on:click>
+            <LogOut />
+          </button>
+        </div>
+      </div>
       <div class="flex justify-center">
         <Modal title={"Editar dados da empresa"} bind:open={defaultModal2}>
           <form
