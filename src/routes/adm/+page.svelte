@@ -1,12 +1,13 @@
 <script lang="ts">
+
   import { storage } from "./../fb.js";
   import db from "../fb";
   import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-  import { getAuth, onAuthStateChanged } from "firebase/auth";
+  import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import toast, { Toaster } from "svelte-french-toast";
-  import { Trash2, Pencil, Loader, X, LoaderCircle, CircleArrowLeft, LogOut } from "lucide-svelte";
+  import { Trash2, Pencil, Loader, X, LoaderCircle, CircleArrowLeft, LogOut, CircleUserRound } from "lucide-svelte";
   import {
     collection,
     getDocs,
@@ -73,6 +74,7 @@
           };
 
           reader.readAsDataURL(file);
+          value = file;
         }
       }
     }
@@ -98,6 +100,18 @@
       }
     }
   };
+
+  const logOut = async () => {
+    const auth = getAuth();
+
+    await signOut(auth).then(() => {
+      goto("/login");
+    }).catch((error) => {
+      toast.error(`Ocorreu um erro ao deslogar: ${error.message}`, {
+        position: "top-right"
+      });
+    });
+  }
 
   const listsCollection = collection(db, "lists");
   const companyCollection = collection(db, "company");
@@ -127,7 +141,7 @@
     href = "";
     border_color = "#d1cdcd";
     color = "#000";
-    bg_color = "#fff";
+    bg_color = "#f0f2f5";
     title = "";
   };
 
@@ -281,17 +295,15 @@
 
 
   onMount(() => {
-      const auth = getAuth();
+    const auth = getAuth();
 
-      onAuthStateChanged(auth, (user) => {
-          if(user) {
-              console.log("Usuário logado!");
-              usuario = String(user.email);
-          } else {
-              console.log("Usuário não encontrado");
-              goto("/login");
-          }
-      })
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            usuario = String(user.email);
+        } else {
+            goto("/login");
+        }
+    })
   });
 </script>
 
@@ -303,13 +315,16 @@
   {:else}
   <div>
       <div>
-        <button class="absolute left-10" on:click={() => goto("/")}>
+        <button class="absolute left-5" on:click={() => goto("/")}>
           <CircleArrowLeft />
         </button>
 
-        <div class="flex justify-center gap-2 absolute right-12 text-sm">
-          <p>{usuario}</p>
-          <button on:click>
+        <div class="flex justify-center items-center gap-2 absolute right-5 mt-0.5 text-sm">
+          <span class="hidden lg:flex items-center gap-2">
+            <CircleUserRound />
+            <p>{usuario}</p>
+          </span>
+          <button on:click={() => logOut()}>
             <LogOut />
           </button>
         </div>
