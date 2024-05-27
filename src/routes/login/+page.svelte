@@ -11,28 +11,26 @@
     const auth = getAuth();
     
     const logIn = (e: Event) => {
-        e.preventDefault();
-        loading = true;
+    e.preventDefault();
+    loading = true;
 
-        let email = document.getElementById("email") as HTMLInputElement;
-        let password = document.getElementById("password") as HTMLInputElement;
+    let email = document.getElementById("email") as HTMLInputElement;
+    let password = document.getElementById("password") as HTMLInputElement;
 
-        signInWithEmailAndPassword(auth, email.value, password.value)
-        .then((userCredential) => {
-            userCredential.user;
-            toast.success(`Usuário logado com sucesso!`, {
-                position: 'bottom-right'
-            });
-            goto("/adm");
-        })
-        .catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-        })
-        .finally(() => {
-            loading = false;
-        }) 
-    }
+    signInWithEmailAndPassword(auth, email.value, password.value)
+    .then(() => {
+        toast.success(`Usuário logado com sucesso!`, {
+            position: 'bottom-right'
+        });
+        goto("/adm");
+    })
+    .catch(() => {
+    })
+    .finally(() => {
+        loading = false;
+    });
+}
+
 </script>
 
 

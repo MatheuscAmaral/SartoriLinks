@@ -1,3 +1,16 @@
+<style>
+  .fixed-size-circle {
+    width: 96px; 
+    height: 96px;
+    border-radius: 50%;
+    border: 4px solid #D1D5DB; 
+    object-fit: cover;
+    display: block; 
+  }
+
+</style>
+
+
 <script lang="ts">
 	import { toast } from 'svelte-french-toast';
   import { onMount } from "svelte";
@@ -69,7 +82,7 @@
   class="flex flex-col justify-center items-center h-svh gap-6 mx-5 lg:mx-auto lg:max-w-3xl"
 >
   {#each company as c}
-    <img src={c.logo} alt="logo" class={`w-28 rounded-full border-4 border-gray-300`} />
+    <img src={c.logo} alt="logo"  class="fixed-size-circle"/>
 
     <h1
       class={`text-2xl font-semibold ${light ? "text-gray-700" : "text-gray-200"}`}

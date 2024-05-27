@@ -1,5 +1,16 @@
-<script lang="ts">
+<style>
+  .fixed-size-circle {
+    width: 96px; 
+    height: 96px;
+    border-radius: 50%;
+    border: 4px solid #D1D5DB; 
+    object-fit: cover;
+    display: block; 
+  }
 
+</style>
+
+<script lang="ts">
   import { storage } from "./../fb.js";
   import db from "../fb";
   import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -414,9 +425,10 @@
             >
               <img
                 src={company[0].logo.length ? c.logo : "/No_Image_Available.jpg"}
-                class={`w-24 rounded-full border-4 border-gray-300`}
+                class="fixed-size-circle"
                 alt="logo"
               />
+          
 
               <button
                 on:click={() => (defaultModal2 = true)}
